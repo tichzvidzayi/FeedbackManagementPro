@@ -1,0 +1,58 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: 'Feedback API'
+  description: 'API for managing customer feedback'
+host: 'localhost:3000'
+basePath: '/'
+schemes:
+  - 'http'
+paths:
+  /feedback:
+    post:
+      summary: 'Create a new feedback'
+      consumes:
+        - 'application/json'
+      produces:
+        - 'application/json'
+      parameters:
+        - in: 'body'
+          name: 'feedback'
+          description: 'Feedback object'
+          schema:
+            $ref: '#/definitions/Feedback'
+      responses:
+        201:
+          description: 'Feedback created successfully'
+          schema:
+            $ref: '#/definitions/Feedback'
+        400:
+          description: 'Bad request'
+    get:
+      summary: 'Get all feedback'
+      produces:
+        - 'application/json'
+      responses:
+        200:
+          description: 'Successful operation'
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/Feedback'
+        500:
+          description: 'Internal server error'
+definitions:
+  Feedback:
+    type: 'object'
+    required:
+      - 'name'
+      - 'email'
+      - 'message'
+    properties:
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+        format: 'email'
+      message:
+        type: 'string'
