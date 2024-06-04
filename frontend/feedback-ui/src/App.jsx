@@ -1,67 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FeedbackForm from './components/FeedbackForm';
-import AdminLogin from './components/AdminLogin';
-import AdminPanel from './components/AdminPanel';
+import FeedbackList from './components/FeedbackList';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
   const [feedbackList, setFeedbackList] = useState([]);
-  const [adminToken, setAdminToken] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch feedback list if user is logged in
-    if (loggedIn) {
-      fetchFeedbackList();
-    }
-  }, [loggedIn]);
+    const fetchFeedbackList = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('/api/feedback');
+        setFeedbackList(response.data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchFeedbackList = async () => {
-    try {
-      const response = await axios.get('/api/v1/feedback', {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      });
-      setFeedbackList(response.data);
-    } catch (error) {
-      console.error('Error fetching feedback list:', error);
-    }
-  };
+    fetchFeedbackList();
+  }, []);
 
   const handleFeedbackSubmit = async (feedbackData) => {
+    setLoading(true);
     try {
-      await axios.post('/api/v1/feedback', feedbackData);
-      console.log('Feedback submitted successfully');
+      const response = await axios.post('/api/feedback', feedbackData);
+      setFeedbackList([...feedbackList, response.data]);
+      alert('Feedback submitted successfully!');
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleAdminLogin = async (credentials) => {
-    try {
-      const response = await axios.post('/api/v1/login', credentials);
-      setAdminToken(response.data.token);
-      setLoggedIn(true);
-    } catch (error) {
-      console.error('Error logging in as admin:', error);
-    }
-  };
-
-  const handleAdminLogout = () => {
-    setLoggedIn(false);
-    setAdminToken('');
   };
 
   return (
     <div className="container mt-4">
-      {!loggedIn ? (
-        <AdminLogin onLogin={handleAdminLogin} />
-      ) : (
-        <AdminPanel feedbackList={feedbackList} onLogout={handleAdminLogout} />
-      )}
       <FeedbackForm onSubmit={handleFeedbackSubmit} />
+      {loading ? (
+        <p>Loading feedback...</p>
+      ) : error ? (
+        <p>Error: {error}</p>
+      ) : (
+        <FeedbackList feedbackList={feedbackList} />
+      )}
     </div>
   );
 };
